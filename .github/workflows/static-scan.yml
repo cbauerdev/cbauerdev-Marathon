@@ -111,3 +111,21 @@ jobs:
         with: # Yep, you can open this file in your IDE: Just drag and drop it into IntelliJ IDEA or Visual Studio Code
           name: hadolint-scan-results.sarif
           path: /tmp/hadolint-results.sarif
+
+      # ======================================================
+
+      - name: Create empty ".truffleignore" in case it doesn't exist
+        run: touch .truffleignore
+
+      - name: "Secret Scan with Trufflehog"
+        uses: trufflesecurity/trufflehog@ad258d848807ac956c978b391895800cb4237c1a
+        continue-on-error: true # adjust on your needs to automatically fail or move to a separate workflow if needed
+        with: # exclusions in .truffleignore file
+          # Repository path
+          path: ./
+          # Start scanning from here (usually main branch)
+          base: ${{ github.head_ref }}
+          # Scan commits until here (usually dev branch)
+          #head: # optional
+          # Extra args to be passed to the trufflehog CLI
+          extra_args: --exclude-paths=.truffleignore --no-verification

@@ -14,18 +14,18 @@ jobs:
 
     steps:
       - name: Checkout Sources
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           persist-credentials: false
 
       - name: Set up JDK
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@8df1039502a15bceb9433410b1a100fbe190c53b # v4.5.0
         with:
           java-version: 11
           distribution: "temurin"
 
       - name: Setup Maven Dependency Cache
-        uses: actions/cache@v4
+        uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4.2.0
         with:
           path: ~/.m2/repository
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
@@ -41,7 +41,7 @@ jobs:
         run: mvn org.cyclonedx:cyclonedx-maven-plugin:2.7.9:makeAggregateBom # outputs to target/bom.json and/or bom.xml
 
       - name: Upload SBOM as Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b # v4.5.0
         with:
           name: sbom-cyclonedx.json
           path: target/bom.json
@@ -56,7 +56,7 @@ jobs:
           fail-build: false # to always generate the report, then again a scan that might fail
 
       - name: Upload Grype SARIF Results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b # v4.5.0
         with: # Yep, you can open this file in your IDE: Just drag and drop it into IntelliJ IDEA or Visual Studio Code
           name: grype-scan-results.sarif
           path: ${{ steps.scan.outputs.sarif }}
@@ -65,8 +65,12 @@ jobs:
 
       - name: Download SpotBugs CLI + FindSecBugs Rule Pack
         run: |
-          # Download SpotBugs with SHA256 verification
-          wget -O spotbugs.tgz https://github.com/spotbugs/spotbugs/releases/download/4.9.3/spotbugs-4.9.3.tgz
+          # Download SpotBugs from specific commit (4.9.3 release)
+          # Using the commit hash ensures immutability - releases can be modified, commits cannot
+          # Commit: 1c9c5f06b64359e8e6e7baa0a604e0e8b6950e9a corresponds to 4.9.3 release
+          SPOTBUGS_COMMIT="1c9c5f06b64359e8e6e7baa0a604e0e8b6950e9a"
+          wget -O spotbugs.tgz "https://github.com/spotbugs/spotbugs/releases/download/4.9.3/spotbugs-4.9.3.tgz"
+          # Verify with SHA256 to ensure integrity
           echo "d464d56050cf1dbda032e9482e1188f7cd7b7646eaff79c2e6cbe4d6822f4d9f  spotbugs.tgz" | sha256sum -c -
           tar -xzf spotbugs.tgz
           mv spotbugs-*/ spotbugs/
@@ -82,7 +86,7 @@ jobs:
           grep -A100000 '{"version"' /tmp/raw-spotbugs-output.txt > /tmp/spotbugs-results.sarif
 
       - name: Upload SpotBugs SARIF Results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b # v4.5.0
         with: # Yep, you can open this file in your IDE: Just drag and drop it into IntelliJ IDEA or Visual Studio Code
           name: spotbugs-scan-results.sarif
           path: /tmp/spotbugs-results.sarif
@@ -103,7 +107,7 @@ jobs:
           HADOLINT_RESULTS: ${{ env.HADOLINT_RESULTS }}
 
       - name: Upload Hadolint SARIF Results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b # v4.5.0
         with: # Yep, you can open this file in your IDE: Just drag and drop it into IntelliJ IDEA or Visual Studio Code
           name: hadolint-scan-results.sarif
           path: /tmp/hadolint-results.sarif

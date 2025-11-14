@@ -154,3 +154,37 @@ jobs:
         with: # Yep, you can open this file in your IDE: Just drag and drop it into IntelliJ IDEA or Visual Studio Code
           name: semgrep-scan-results.sarif
           path: /tmp/semgrep-results.sarif
+
+  # ======================================================
+
+  collect-sarif-results: # Use github/codeql-action/upload-sarif action instead (when either public repo or CodeQL enabled in enterprise commercial repo)
+    name: Collect Results
+    runs-on: ubuntu-latest
+    needs:
+      - sast-scans
+      - semgrep-scan
+
+    steps:
+      - name: Download all SARIF artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: sarif-input
+
+      - name: List downloaded SARIFs
+        if: false # Just used for debugging
+        run: |
+          pwd
+          find sarif-input -type f
+
+      - name: Install sarif-tools and convert SARIF to HTML
+        run:
+          | # Bonus idea: use "sarif trend" or "sarif diff" to compare results
+          pip install sarif-tools
+          sarif summary sarif-input
+          sarif html -o /tmp/summary.html sarif-input
+
+      - name: Upload SARIF HTML Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: summary.html
+          path: /tmp/summary.html

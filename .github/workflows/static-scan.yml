@@ -65,11 +65,15 @@ jobs:
 
       - name: Download SpotBugs CLI + FindSecBugs Rule Pack
         run: |
+          # Download SpotBugs with SHA256 verification
           wget -O spotbugs.tgz https://github.com/spotbugs/spotbugs/releases/download/4.9.3/spotbugs-4.9.3.tgz
+          echo "d464d56050cf1dbda032e9482e1188f7cd7b7646eaff79c2e6cbe4d6822f4d9f  spotbugs.tgz" | sha256sum -c -
           tar -xzf spotbugs.tgz
           mv spotbugs-*/ spotbugs/
 
+          # Download FindSecBugs with SHA256 verification
           wget -O findsecbugs.jar https://search.maven.org/remotecontent?filepath=com/h3xstream/findsecbugs/findsecbugs-plugin/1.12.0/findsecbugs-plugin-1.12.0.jar
+          echo "97604c6be648184fdafaf2df5f4bdbc8ec5c7468677847a6c42f4a09d81610ba  findsecbugs.jar" | sha256sum -c -
           mv findsecbugs.jar spotbugs/plugin/.
 
       - name: Run SpotBugs CLI (SARIF)

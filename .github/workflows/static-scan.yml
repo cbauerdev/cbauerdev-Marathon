@@ -86,3 +86,24 @@ jobs:
         with: # Yep, you can open this file in your IDE: Just drag and drop it into IntelliJ IDEA or Visual Studio Code
           name: spotbugs-scan-results.sarif
           path: /tmp/spotbugs-results.sarif
+
+      # ======================================================
+
+      - name: Hadolint Dockerfile Linter
+        uses: hadolint/hadolint-action@54c9adbab1582c2ef04b2016b760714a4bfde3cf
+        with:
+          dockerfile: Dockerfile
+          recursive: true
+          no-fail: true
+          format: sarif
+
+      - name: Write HADOLINT_RESULTS to SARIF file
+        run: echo "$HADOLINT_RESULTS" > /tmp/hadolint-results.sarif
+        env:
+          HADOLINT_RESULTS: ${{ env.HADOLINT_RESULTS }}
+
+      - name: Upload Hadolint SARIF Results
+        uses: actions/upload-artifact@v4
+        with: # Yep, you can open this file in your IDE: Just drag and drop it into IntelliJ IDEA or Visual Studio Code
+          name: hadolint-scan-results.sarif
+          path: /tmp/hadolint-results.sarif

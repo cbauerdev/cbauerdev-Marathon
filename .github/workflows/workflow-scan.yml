@@ -1,0 +1,45 @@
+name: Workflow Scan
+
+on:
+  workflow_dispatch:
+#  pull_request:
+#    paths:
+#      - '.github/workflows/*'
+#  push:
+#    paths:
+#      - '.github/workflows/*'
+
+permissions: # https://docs.github.com/en/actions/using-jobs/assigning-permissions-to-jobs
+  contents: read
+
+jobs:
+  workflow-scans:
+    name: Workflow Scans
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Sources
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.13.5
+
+      - name: Install zizmor
+        run: pip install zizmor
+
+      - name: Run zizmor on workflows
+        run:
+          | # --no-exit-codes --format sarif . > zizmor-scan-results.sarif || true
+          zizmor --offline .
+
+#      - name: Upload SARIF (zizmor)
+#        uses: actions/upload-artifact@v4 # Use github/codeql-action/upload-sarif action instead (when either public repo or CodeQL enabled in enterprise commercial repo)
+#        with:
+#          name: zizmor-scan-results.sarif
+#          path: zizmor-scan-results.sarif
+#        # You can also inspect the results and/or trigger a broken run on high or critical issues if you want... or visualize the results using sarif-tools or open the SARIF file in your IDE or use CodeQL to upload the results to GitHub Security tab. Or just don't use the SARIF upload at all and simply remove the "--no-exit-codes" to directly fail the workflow and write issues to log.

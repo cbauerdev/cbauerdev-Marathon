@@ -7,15 +7,12 @@ on:
 permissions:
   contents: read
 
-
 jobs:
-
   sast-scans:
     name: SAST Scans
     runs-on: ubuntu-latest
 
     steps:
-
       - name: Checkout Sources
         uses: actions/checkout@v4
         with:
@@ -25,7 +22,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           java-version: 11
-          distribution: 'temurin'
+          distribution: "temurin"
 
       - name: Setup Maven Dependency Cache
         uses: actions/cache@v4
@@ -38,9 +35,7 @@ jobs:
       - name: Build with Maven
         run: mvn clean install
 
-
       # ======================================================
-
 
       - name: Generate CycloneDX SBOM
         run: mvn org.cyclonedx:cyclonedx-maven-plugin:2.7.9:makeAggregateBom # outputs to target/bom.json and/or bom.xml
@@ -50,3 +45,18 @@ jobs:
         with:
           name: sbom-cyclonedx.json
           path: target/bom.json
+
+      # ======================================================
+
+      - name: Grype Dependency Scanner (Report)
+        id: scan
+        uses: anchore/scan-action@be7a22da4f22dde446c4c4c099887ff5b256526c
+        with:
+          path: "."
+          fail-build: false # to always generate the report, then again a scan that might fail
+
+      - name: Upload Grype SARIF Results
+        uses: actions/upload-artifact@v4
+        with: # Yep, you can open this file in your IDE: Just drag and drop it into IntelliJ IDEA or Visual Studio Code
+          name: grype-scan-results.sarif
+          path: ${{ steps.scan.outputs.sarif }}

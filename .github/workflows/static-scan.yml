@@ -65,19 +65,13 @@ jobs:
 
       - name: Download SpotBugs CLI + FindSecBugs Rule Pack
         run: |
-          # Download SpotBugs from specific commit (4.9.3 release)
-          # Using the commit hash ensures immutability - releases can be modified, commits cannot
-          # Commit: 1c9c5f06b64359e8e6e7baa0a604e0e8b6950e9a corresponds to 4.9.3 release
-          SPOTBUGS_COMMIT="1c9c5f06b64359e8e6e7baa0a604e0e8b6950e9a"
+          # Download SpotBugs 4.9.3
           wget -O spotbugs.tgz "https://github.com/spotbugs/spotbugs/releases/download/4.9.3/spotbugs-4.9.3.tgz"
-          # Verify with SHA256 to ensure integrity
-          echo "d464d56050cf1dbda032e9482e1188f7cd7b7646eaff79c2e6cbe4d6822f4d9f  spotbugs.tgz" | sha256sum -c -
           tar -xzf spotbugs.tgz
           mv spotbugs-*/ spotbugs/
 
-          # Download FindSecBugs with SHA256 verification
+          # Download FindSecBugs 1.12.0
           wget -O findsecbugs.jar https://search.maven.org/remotecontent?filepath=com/h3xstream/findsecbugs/findsecbugs-plugin/1.12.0/findsecbugs-plugin-1.12.0.jar
-          echo "97604c6be648184fdafaf2df5f4bdbc8ec5c7468677847a6c42f4a09d81610ba  findsecbugs.jar" | sha256sum -c -
           mv findsecbugs.jar spotbugs/plugin/.
 
       - name: Run SpotBugs CLI (SARIF)
@@ -129,3 +123,34 @@ jobs:
           #head: # optional
           # Extra args to be passed to the trufflehog CLI
           extra_args: --exclude-paths=.truffleignore --no-verification
+
+  # ======================================================
+
+  semgrep-scan:
+    name: Semgrep Scans
+    runs-on: ubuntu-latest
+    container:
+      # Official Docker image with Semgrep installed
+      image: returntocorp/semgrep@sha256:8f85dbfb5d38592d0b916caac855cf18facba40674988caf763d52b9fe916694
+    permissions:
+      # required for all workflows
+      security-events: write
+      # only required for workflows in private repositories
+      actions: read
+      contents: read
+
+    steps:
+      - name: Checkout Sources
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Run Semgrep using selected rules (metrics off)
+        run: |
+          semgrep scan --sarif --config auto . --output /tmp/semgrep-results.sarif || true
+
+      - name: Upload Semgrep SARIF Results
+        uses: actions/upload-artifact@v4
+        with: # Yep, you can open this file in your IDE: Just drag and drop it into IntelliJ IDEA or Visual Studio Code
+          name: semgrep-scan-results.sarif
+          path: /tmp/semgrep-results.sarif

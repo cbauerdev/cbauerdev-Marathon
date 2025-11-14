@@ -50,3 +50,4 @@ hs_err_pid*
 !integration/**/**/**/**/*.war
 !integration/**/**/**/**/*.zip
 !integration/**/**/**/**/*.tar.gz
+integration/db/hsqldb/bin/marathon.lck
